@@ -1,3 +1,4 @@
+import React from "react";
 import {
   IonContent,
   IonHeader,
@@ -5,13 +6,29 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  useIonViewWillEnter,
 } from "@ionic/react";
-
+import { Repository } from "../interfaces/Repository";
 import "./Tab1.css";
-import { pencilOutline, trashOutline } from "ionicons/icons";
 import RepoItem from "../components/RepoItem";
+import { fetchRepositories } from "../services/GithubServices";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const Tab1: React.FC = () => {
+  const [repos, setRepos] = React.useState<Repository[]>([]);
+  const [loading, setLoading] = React.useState(false);
+
+  const loadRepositories = async () => {
+    setLoading(true);
+    const reposData = await fetchRepositories();
+    setRepos(reposData);
+    setLoading(false);
+  };
+
+  useIonViewWillEnter(() => {
+    loadRepositories();
+  });
+
   return (
     <IonPage>
       <IonHeader>
@@ -25,33 +42,20 @@ const Tab1: React.FC = () => {
             <IonTitle size="large">Lista de Repositorios</IonTitle>
           </IonToolbar>
         </IonHeader>
-
-        <IonList>
-          <RepoItem
-            name="Repositorio 1"
-            description="Descripcion del repositorio"
-            language="JavaScript"
-            avatarUrl="https://img.icons8.com/color/1200/the-flash-head.jpg"
-          />
-          <RepoItem
-            name="Repositorio 2"
-            description="Descripcion del repositorio"
-            language="JavaScript"
-            avatarUrl="https://www.shutterstock.com/image-vector/jakarta-indonesia-april-30-2022-600nw-2151111897.jpg"
-          />
-          <RepoItem
-            name="Repositorio 3"
-            description="Descripcion del repositorio"
-            language="JavaScript"
-            avatarUrl="https://static.vecteezy.com/system/resources/thumbnails/047/915/763/small/superhero-style-illustration-isolated-on-white-background-vector.jpg"
-          />
-          <RepoItem
-            name="Repositorio 4"
-            description="Descripcion del repositorio"
-            language="JavaScript"
-            avatarUrl="https://i.pinimg.com/736x/a7/15/c5/a715c5cdb21803ad46c06215e1ecd660.jpg"
-          />
-        </IonList>
+        {!loading && repos.length > 0 && (
+          <IonList>
+            {repos.map(( repo ) => (
+              <RepoItem key={repo.id} {...repo} />
+            ))}
+          </IonList>
+        )}  
+        <LoadingSpinner isOpen={loading} />
+        {!loading && repos.length === 0 && (
+          <div>
+            <p>
+              No se encontraron repositorios.</p>
+          </div>
+        )}
       </IonContent>
     </IonPage>
   );
